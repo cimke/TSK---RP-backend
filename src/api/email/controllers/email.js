@@ -21,8 +21,31 @@ module.exports = createCoreController('api::email.email', ({ strapi }) => ({
             humanReadable: 'This email already exists',
           });
       }
-  
+
+      // random code
+      const generateRandomCode = () => {
+        return Math.random().toString(36).substring(2, 8).toUpperCase();
+      };
+
+      let code;
+      let isCodeUnique = false;
+
+      while (!isCodeUnique) {
+        code = generateRandomCode();
+
+        const existingCode = await strapi.entityService.findMany('api::email.email', {
+          filters: { referral_code: code },
+        });
+
+        if (existingCode.length === 0) {
+          isCodeUnique = true;
+        }
+      }
+
+      ctx.request.body.data.referral_code = code;
+
       const response = await super.create(ctx);
-      return response;
+      
+      return { referral_code: response.data.attributes.referral_code };
     },
 }));
